@@ -1,4 +1,4 @@
-package com.seuoj.pointquestbackend;
+package com.twilight.pointquestbackend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

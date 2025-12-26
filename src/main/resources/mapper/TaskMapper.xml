@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twilight.pointquestbackend.mapper.TaskMapper">
+    <sql id="tableName">
+        task
+    </sql>
+
+    <sql id="baseColumn">
+        id,title,description,point_reward,deadline,status,created_by,created_at,updated_at
+    </sql>
+
+</mapper>

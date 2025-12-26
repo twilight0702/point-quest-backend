@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.twilight.pointquestbackend.mapper.OrderItemMapper">
+    <sql id="tableName">
+        order_item
+    </sql>
+
+    <sql id="baseColumn">
+        id,order_id,reward_id,reward_name_snapshot,point_cost_snapshot,qty
+    </sql>
+
+</mapper>
