@@ -37,25 +37,25 @@ public class Users implements Serializable {
      * 
      */
     @TableField(value = "password_hash")
-    private String password_hash;
+    private String passwordHash;
 
     /**
      * 
      */
     @TableField(value = "role")
-    private Object role;
+    private String role;
 
     /**
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private Date createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updated_at;
+    private Date updatedAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
