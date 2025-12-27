@@ -1,10 +1,9 @@
 package com.twilight.pointquestbackend.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -20,6 +19,9 @@ public class Task implements Serializable {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
+    @TableField(value = "task_no")
+    private String taskNo;
 
     /**
      * 
@@ -37,13 +39,13 @@ public class Task implements Serializable {
      * 
      */
     @TableField(value = "point_reward")
-    private Long point_reward;
+    private Long pointReward;
 
     /**
      * 
      */
     @TableField(value = "deadline")
-    private Date deadline;
+    private LocalDateTime deadline;
 
     /**
      * 
@@ -55,19 +57,27 @@ public class Task implements Serializable {
      * 
      */
     @TableField(value = "created_by")
-    private Long created_by;
+    private Long createdBy;
+
+
+    @TableField(value = "created_user_type")
+    private String createdUserType;
 
     /**
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private LocalDateTime createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updated_at;
+    private LocalDateTime updatedAt;
+
+    @TableLogic
+    @TableField(value = "is_del")
+    private Integer isDel;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

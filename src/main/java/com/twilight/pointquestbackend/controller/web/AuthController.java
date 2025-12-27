@@ -1,4 +1,4 @@
-package com.twilight.pointquestbackend.controller;
+package com.twilight.pointquestbackend.controller.web;
 
 import com.twilight.pointquestbackend.common.ApiResponse;
 import com.twilight.pointquestbackend.dto.AdminLoginDTO;
