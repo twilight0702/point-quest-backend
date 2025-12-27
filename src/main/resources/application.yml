@@ -27,5 +27,4 @@ mybatis-plus:
 security:
   jwt:
     secret: ${POINTQUEST_JWT_SECRET:pointquest-dev-secret-change-me-please-123456}
-    expires-minutes: ${POINTQUEST_JWT_EXPIRES_MINUTES:120}
-    cookie-name: ${POINTQUEST_JWT_COOKIE:token}
+    expires-minutes: ${POINTQUEST_JWT_EXPIRES_MINUTES:1200000000}

@@ -9,45 +9,24 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 用户表：存储登录账号、角色及创建/更新时间
- * @TableName users
+ * 管理员账户表：后台登录账号与凭证
+ * @TableName admin_user
  */
-@TableName(value ="users")
+@TableName(value ="admin_user")
 @Data
-public class Users implements Serializable {
-    /**
-     * 
-     */
+public class AdminUser implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 
-     */
     @TableField(value = "username")
     private String username;
 
-    /**
-     * 
-     */
-    @TableField(value = "email")
-    private String email;
-
-    /**
-     * 
-     */
     @TableField(value = "password_hash")
     private String passwordHash;
 
-    /**
-     * 
-     */
     @TableField(value = "created_at")
     private Date createdAt;
 
-    /**
-     * 
-     */
     @TableField(value = "updated_at")
     private Date updatedAt;
 

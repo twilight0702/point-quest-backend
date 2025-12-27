@@ -8,19 +8,30 @@ USE point_quest;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS users;
 -- 用户与认证
 CREATE TABLE users (
     id            BIGINT PRIMARY KEY AUTO_INCREMENT,
     username      VARCHAR(64)  NOT NULL,
     email         VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role          ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     index idx_email (email)
-) COMMENT='用户表：存储登录账号、角色及创建/更新时间';
+) COMMENT='用户表：存储登录账号及创建/更新时间';
+
+DROP TABLE IF EXISTS admin_user;
+CREATE TABLE admin_user (
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username      VARCHAR(64)  NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    index idx_admin_username (username)
+) COMMENT='管理员账户表：为后台管理提供登录账号与凭据';
 
 -- 任务与提交
+DROP TABLE IF EXISTS task;
 CREATE TABLE task (
     id           BIGINT PRIMARY KEY AUTO_INCREMENT,
     title        VARCHAR(255) NOT NULL,
@@ -31,9 +42,10 @@ CREATE TABLE task (
     created_by   BIGINT       NOT NULL,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_task_creator FOREIGN KEY (created_by) REFERENCES users (id)
+    CONSTRAINT fk_task_creator FOREIGN KEY (created_by) REFERENCES admin_user (id)
 ) COMMENT='任务表：记录可领取任务、时间范围与发布者';
 
+DROP TABLE IF EXISTS task_submission;
 CREATE TABLE task_submission (
     id            BIGINT PRIMARY KEY AUTO_INCREMENT,
     task_id       BIGINT       NOT NULL,
@@ -49,6 +61,7 @@ CREATE TABLE task_submission (
 CREATE INDEX idx_submission_task_user_status ON task_submission (task_id, user_id, status);
 
 -- 审核记录
+DROP TABLE IF EXISTS submission_review;
 CREATE TABLE submission_review (
     id             BIGINT PRIMARY KEY AUTO_INCREMENT,
     submission_id  BIGINT    NOT NULL UNIQUE,
@@ -57,10 +70,11 @@ CREATE TABLE submission_review (
     points_awarded BIGINT    NOT NULL CHECK (points_awarded >= 0),
     created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_review_submission FOREIGN KEY (submission_id) REFERENCES task_submission (id),
-    CONSTRAINT fk_review_reviewer FOREIGN KEY (reviewer_id) REFERENCES users (id)
+    CONSTRAINT fk_review_reviewer FOREIGN KEY (reviewer_id) REFERENCES admin_user (id)
 ) COMMENT='审核记录表：记录管理员对提交的评审与奖励积分';
 
 -- 积分账户与流水
+DROP TABLE IF EXISTS point_account;
 CREATE TABLE point_account (
     id         BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id    BIGINT    NOT NULL UNIQUE,
@@ -69,6 +83,7 @@ CREATE TABLE point_account (
     CONSTRAINT fk_account_user FOREIGN KEY (user_id) REFERENCES users (id)
 ) COMMENT='积分账户表：维护用户当前积分余额';
 
+DROP TABLE IF EXISTS point_ledger;
 CREATE TABLE point_ledger (
     id         BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id    BIGINT                                         NOT NULL,
@@ -82,6 +97,7 @@ CREATE TABLE point_ledger (
 CREATE INDEX idx_ledger_user_created_at ON point_ledger (user_id, created_at);
 
 -- 商品与库存
+DROP TABLE IF EXISTS reward;
 CREATE TABLE reward (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(128) NOT NULL,
@@ -94,6 +110,7 @@ CREATE TABLE reward (
     updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT='兑换商品表：维护奖品信息、分类与上下架状态';
 
+DROP TABLE IF EXISTS reward_inventory;
 CREATE TABLE reward_inventory (
     reward_id BIGINT PRIMARY KEY,
     stock     INT        NOT NULL DEFAULT 0 CHECK (stock >= 0),
@@ -103,6 +120,7 @@ CREATE TABLE reward_inventory (
 ) COMMENT='库存表：记录每个奖品的库存数量与版本号';
 
 -- 活动奖池
+DROP TABLE IF EXISTS pool;
 CREATE TABLE pool (
     id         BIGINT PRIMARY KEY AUTO_INCREMENT,
     title      VARCHAR(128) NOT NULL,
@@ -113,6 +131,7 @@ CREATE TABLE pool (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT='活动奖池：定义活动窗口与奖池状态';
 
+DROP TABLE IF EXISTS pool_item;
 CREATE TABLE pool_item (
     id        BIGINT PRIMARY KEY AUTO_INCREMENT,
     pool_id   BIGINT    NOT NULL,
@@ -124,6 +143,7 @@ CREATE TABLE pool_item (
 ) COMMENT='奖池条目：记录奖池与奖品的关联及展示顺序';
 
 -- 订单与支付
+DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
     id           BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_no     VARCHAR(64) NOT NULL UNIQUE,
@@ -138,6 +158,7 @@ CREATE TABLE orders (
 ) COMMENT='订单表：记录用户兑换订单与收货信息';
 CREATE INDEX idx_orders_user_created_at ON orders (user_id, created_at);
 
+DROP TABLE IF EXISTS order_item;
 CREATE TABLE order_item (
     id                    BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_id              BIGINT       NOT NULL,
@@ -150,6 +171,7 @@ CREATE TABLE order_item (
 ) COMMENT='订单明细表：记录每个订单包含的奖品快照及数量';
 CREATE INDEX idx_order_item_order ON order_item (order_id);
 
+DROP TABLE IF EXISTS payment;
 CREATE TABLE payment (
     id         BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_id   BIGINT      NOT NULL UNIQUE,
@@ -160,6 +182,7 @@ CREATE TABLE payment (
 ) COMMENT='支付记录表：模拟支付渠道的结果信息';
 
 -- 站内消息
+DROP TABLE IF EXISTS message;
 CREATE TABLE message (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     title       VARCHAR(255) NOT NULL,

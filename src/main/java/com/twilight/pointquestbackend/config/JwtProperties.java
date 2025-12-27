@@ -18,9 +18,5 @@ public class JwtProperties {
      * Expiration in minutes.
      */
     private long expiresMinutes = 120;
-    /**
-     * Cookie name storing token. (Unused after switching to Authorization header)
-     */
-    private String cookieName = "token";
 
 }

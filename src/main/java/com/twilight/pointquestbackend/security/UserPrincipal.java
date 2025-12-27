@@ -1,5 +1,6 @@
 package com.twilight.pointquestbackend.security;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,9 +9,12 @@ import java.util.Collection;
 import java.util.List;
 
 public class UserPrincipal implements UserDetails {
+    @Getter
     private final Long id;
     private final String username;
+    @Getter
     private final String email;
+    @Getter
     private final String role;
 
     public UserPrincipal(Long id, String username, String email, String role) {
@@ -18,18 +22,6 @@ public class UserPrincipal implements UserDetails {
         this.username = username;
         this.email = email;
         this.role = role;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     @Override
