@@ -102,7 +102,7 @@ public class WebTaskController {
     }
 
     /**
-     * 上传凭证文件，返回可复用的 URL 列表
+     * 上传凭证文件
      */
     @PostMapping("/tasks/{submissionNo}/uploads")
     public ApiResponse<Void> uploadEvidence(@PathVariable String submissionNo,

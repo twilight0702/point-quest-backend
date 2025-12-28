@@ -23,4 +23,47 @@
         ORDER BY ts.created_at DESC
     </select>
 
+    <select id="pageAdminSubmissions"
+            resultType="com.twilight.pointquestbackend.vo.AdminSubmissionVO">
+        SELECT ts.submission_no,
+               ts.status,
+               ts.created_at,
+               ts.evidence_text,
+               t.task_no,
+               t.title AS task_title,
+               t.point_reward,
+               u.username,
+               u.email AS user_email
+        FROM task_submission AS ts
+                 LEFT JOIN task AS t ON ts.task_id = t.id
+                 LEFT JOIN users AS u ON ts.user_id = u.id
+        <where>
+            <if test="status != null and status != ''">
+                ts.status = #{status}
+            </if>
+        </where>
+        ORDER BY ts.created_at DESC
+    </select>
+
+    <select id="getAdminSubmissionDetail"
+            resultType="com.twilight.pointquestbackend.vo.AdminSubmissionDetailVO">
+        SELECT ts.submission_no,
+               ts.status,
+               ts.created_at,
+               ts.evidence_text,
+               ts.user_id,
+               t.task_no,
+               t.title AS task_title,
+               t.point_reward,
+               u.username,
+               u.email AS user_email,
+               sr.comment AS review_comment,
+               sr.points_awarded
+        FROM task_submission AS ts
+                 LEFT JOIN task AS t ON ts.task_id = t.id
+                 LEFT JOIN users AS u ON ts.user_id = u.id
+                 LEFT JOIN submission_review AS sr ON sr.submission_id = ts.id
+        WHERE ts.submission_no = #{submissionNo}
+    </select>
+
 </mapper>
