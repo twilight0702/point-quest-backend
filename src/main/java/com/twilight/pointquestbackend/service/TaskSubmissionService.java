@@ -25,7 +25,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -127,8 +129,12 @@ public class TaskSubmissionService {
         for(MultipartFile file : files) {
             validateFile(file);
             String key = buildObjectKey(principal.getId(), submissionNo, file.getOriginalFilename());
+            Map<String, String> metadata = new HashMap<>();
+            if (StringUtils.hasText(file.getOriginalFilename())) {
+                metadata.put("original-filename", file.getOriginalFilename());
+            }
             try {
-                storageService.store(key, file.getInputStream(), file.getSize(), file.getContentType());
+                storageService.store(key, file.getInputStream(), file.getSize(), file.getContentType(), metadata);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -196,18 +202,26 @@ public class TaskSubmissionService {
     private String buildObjectKey(Long userId, String submissionNo, String originalFilename) {
         String safeName = "file.bin";
         if (StringUtils.hasText(originalFilename)) {
-            // 从原始文件名中提取文件名，防止路径遍历
-            String fileName = originalFilename.substring(originalFilename.lastIndexOf('/') + 1);
-            fileName = fileName.substring(fileName.lastIndexOf('\\') + 1);
-            // 进一步清理文件名，只保留字母、数字、点、连字符和下划线
-            fileName = fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
-            safeName = fileName;
+            safeName = extractFileName(originalFilename);
         }
 
         String uuid = UUID.randomUUID().toString();
         return "evidence/" + userId + "/" + submissionNo + "/" + uuid + "_" + safeName;
     }
 
+    private String extractFileName(String originalFilename) {
+        try {
+            // Strip any path component to avoid traversal while preserving non-ASCII characters.
+            String fileName = Paths.get(originalFilename).getFileName().toString();
+            fileName = fileName.replaceAll("[/\\\\]+", "_");
+            if (StringUtils.hasText(fileName)) {
+                return fileName;
+            }
+        } catch (Exception ignored) {
+        }
+        String fallback = originalFilename.replaceAll("[/\\\\]+", "_");
+        return StringUtils.hasText(fallback) ? fallback : "file.bin";
+    }
 
     public List<String> buildSignedUrls(List<String> keys) {
         if (CollectionUtils.isEmpty(keys)) {

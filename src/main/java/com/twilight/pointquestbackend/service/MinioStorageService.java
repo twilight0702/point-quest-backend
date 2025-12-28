@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.StreamSupport;
 
 @Slf4j
@@ -41,6 +42,11 @@ public class MinioStorageService implements StorageService {
 
     @Override
     public String store(String objectKey, InputStream inputStream, long size, String contentType) {
+        return store(objectKey, inputStream, size, contentType, Map.of());
+    }
+
+    @Override
+    public String store(String objectKey, InputStream inputStream, long size, String contentType, Map<String, String> metadata) {
         String bucket = storageProperties.getMinio().getBucket();
         try {
             PutObjectArgs.Builder builder = PutObjectArgs.builder()
@@ -49,6 +55,9 @@ public class MinioStorageService implements StorageService {
                     .stream(inputStream, size, -1);
             if (StringUtils.hasText(contentType)) {
                 builder.contentType(contentType);
+            }
+            if (metadata != null && !metadata.isEmpty()) {
+                builder.userMetadata(metadata);
             }
             minioClient.putObject(builder.build());
             return objectKey;
