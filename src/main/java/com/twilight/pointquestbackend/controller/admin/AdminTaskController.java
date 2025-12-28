@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/tasks")
-public class TaskController {
+public class AdminTaskController {
 
     private final TaskService taskService;
 
-    public TaskController(TaskService taskService) {
+    public AdminTaskController(TaskService taskService) {
         this.taskService = taskService;
     }
 

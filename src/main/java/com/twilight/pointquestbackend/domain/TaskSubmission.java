@@ -21,29 +21,32 @@ public class TaskSubmission implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+    @TableField(value = "submission_no")
+    private String submissionNo;
+
     /**
      * 
      */
     @TableField(value = "task_id")
-    private Long task_id;
+    private Long taskId;
 
     /**
      * 
      */
     @TableField(value = "user_id")
-    private Long user_id;
+    private Long userId;
 
     /**
      * 
      */
     @TableField(value = "evidence_url")
-    private String evidence_url;
+    private String evidenceUrl;
 
     /**
      * 
      */
     @TableField(value = "evidence_text")
-    private String evidence_text;
+    private String evidenceText;
 
     /**
      * 
@@ -55,13 +58,13 @@ public class TaskSubmission implements Serializable {
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private Date createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updated_at;
+    private Date updatedAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

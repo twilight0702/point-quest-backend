@@ -55,6 +55,7 @@ DROP TABLE IF EXISTS task_submission;
 CREATE TABLE task_submission
 (
     id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    submission_no VARCHAR(64)                      NOT NULL UNIQUE DEFAULT (UUID()),
     task_id       BIGINT                                   NOT NULL,
     user_id       BIGINT                                   NOT NULL,
     evidence_url  VARCHAR(512),
