@@ -20,7 +20,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      logic-delete-field: deleted
+      logic-delete-field: is_del
       logic-delete-value: 1
       logic-not-delete-value: 0
 
@@ -28,3 +28,14 @@ security:
   jwt:
     secret: ${POINTQUEST_JWT_SECRET:pointquest-dev-secret-change-me-please-123456}
     expires-minutes: ${POINTQUEST_JWT_EXPIRES_MINUTES:1200000000}
+
+storage:
+  provider: ${POINTQUEST_STORAGE_PROVIDER:minio}
+  minio:
+    endpoint: http://localhost:9000
+    access-key: admin
+    secret-key: admin123456
+    bucket: pointquest
+    region: ${POINTQUEST_MINIO_REGION:}
+    public-url: ${POINTQUEST_MINIO_PUBLIC_URL:}
+    use-ssl: ${POINTQUEST_MINIO_USE_SSL:false}

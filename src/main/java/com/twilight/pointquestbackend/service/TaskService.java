@@ -72,7 +72,7 @@ public class TaskService {
         if (existing == null) {
             throw new ServiceException(404, "task_not_found");
         }
-        taskMapper.deleteById(uuid);
+        taskMapper.deleteById(existing.getId());
     }
 
     private void applyRequestToTask(Task task, TaskRequest request, boolean isCreate) {
