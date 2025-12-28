@@ -3,6 +3,7 @@ package com.twilight.pointquestbackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.twilight.pointquestbackend.common.ServiceException;
+import com.twilight.pointquestbackend.common.TaskStatus;
 import com.twilight.pointquestbackend.domain.Task;
 import com.twilight.pointquestbackend.dto.TaskRequest;
 import com.twilight.pointquestbackend.mapper.TaskMapper;
@@ -83,7 +84,7 @@ public class TaskService {
         task.setDeadline(request.getDeadline());
         String currentStatus = stringStatus(task.getStatus());
         String resolvedStatus = resolveStatus(request.getStatus(), isCreate ? "OPEN" : currentStatus);
-        task.setStatus(resolvedStatus);
+        task.setStatus(TaskStatus.valueOf(resolvedStatus));
     }
 
     private String resolveStatus(String requested, String fallback) {

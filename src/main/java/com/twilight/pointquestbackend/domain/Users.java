@@ -4,8 +4,13 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
+
+import jakarta.validation.constraints.Email;
 import lombok.Data;
 
 /**
@@ -43,14 +48,15 @@ public class Users implements Serializable {
      * 
      */
     @TableField(value = "created_at")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

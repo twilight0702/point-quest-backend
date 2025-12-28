@@ -37,32 +37,31 @@ DROP TABLE IF EXISTS task;
 CREATE TABLE task
 (
     id                BIGINT PRIMARY KEY AUTO_INCREMENT,
-    task_no           VARCHAR(64)                      NOT NULL UNIQUE DEFAULT (UUID()) COMMENT '任务编号',
-    title             VARCHAR(255)                     NOT NULL,
+    task_no           VARCHAR(64)  NOT NULL UNIQUE DEFAULT (UUID()) COMMENT '任务编号',
+    title             VARCHAR(255) NOT NULL,
     description       TEXT,
-    point_reward      BIGINT                           NOT NULL CHECK (point_reward >= 0),
-    deadline          DATETIME,                                                        -- 类型？
-    status            ENUM ('OPEN', 'CLOSED', 'ENDED') NOT NULL        DEFAULT 'OPEN', -- 枚举感觉要改
-    created_by        BIGINT                           NOT NULL,
-    created_user_type ENUM ('ADMIN', 'USER')           NOT NULL        DEFAULT 'USER',
-    created_at        TIMESTAMP                        NOT NULL        DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP                        NOT NULL        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    is_del            TINYINT(1)                       NOT NULL        DEFAULT 0,
-    CONSTRAINT fk_task_creator FOREIGN KEY (created_by) REFERENCES admin_user (id)     -- 这个要改
+    point_reward      BIGINT       NOT NULL CHECK (point_reward >= 0),
+    deadline          DATETIME,                                                    -- 类型？
+    status            VARCHAR(32)  NOT NULL        DEFAULT 'OPEN',                 -- 枚举感觉要改 'OPEN', 'CLOSED', 'ENDED'
+    created_by        BIGINT       NOT NULL,
+    created_user_type VARCHAR(32)  NOT NULL        DEFAULT 'USER',                 -- USER ADMIN
+    created_at        TIMESTAMP    NOT NULL        DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP    NOT NULL        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_del            TINYINT(1)   NOT NULL        DEFAULT 0,
+    CONSTRAINT fk_task_creator FOREIGN KEY (created_by) REFERENCES admin_user (id) -- 这个要改
 ) COMMENT ='任务表：记录可领取任务、时间范围与发布者';
 
 DROP TABLE IF EXISTS task_submission;
 CREATE TABLE task_submission
 (
     id            BIGINT PRIMARY KEY AUTO_INCREMENT,
-    submission_no VARCHAR(64)                      NOT NULL UNIQUE DEFAULT (UUID()),
-    task_id       BIGINT                                   NOT NULL,
-    user_id       BIGINT                                   NOT NULL,
-    evidence_url  VARCHAR(512),
+    submission_no VARCHAR(64) NOT NULL UNIQUE DEFAULT (UUID()),
+    task_id       BIGINT      NOT NULL,
+    user_id       BIGINT      NOT NULL,
     evidence_text TEXT,
-    status        ENUM ('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
-    created_at    TIMESTAMP                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP                                NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    status        VARCHAR(32) NOT NULL        DEFAULT 'PENDING', -- 枚举感觉要改 'PENDING', 'APPROVED', 'REJECTED'
+    created_at    TIMESTAMP   NOT NULL        DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP   NOT NULL        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_submission_task FOREIGN KEY (task_id) REFERENCES task (id),
     CONSTRAINT fk_submission_user FOREIGN KEY (user_id) REFERENCES users (id)
 ) COMMENT ='任务提交表：用户提交任务完成证明及审批状态';

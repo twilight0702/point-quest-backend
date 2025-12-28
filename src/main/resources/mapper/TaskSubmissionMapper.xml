@@ -9,4 +9,18 @@
         id,task_id,user_id,evidence_url,evidence_text,status,created_at,updated_at
     </sql>
 
+    <select id="pageSubmissions"
+            resultType="com.twilight.pointquestbackend.vo.PageSubmissionsVO$TaskSubmissionSummaryVO">
+        SELECT ts.submission_no,
+               t.task_no,
+               t.title AS taskTitle,
+               t.point_reward,
+               ts.status,
+               ts.created_at
+        FROM task_submission AS ts
+                 LEFT JOIN task AS t ON ts.task_id = t.id
+        WHERE ts.user_id = #{userId}
+        ORDER BY ts.created_at DESC
+    </select>
+
 </mapper>

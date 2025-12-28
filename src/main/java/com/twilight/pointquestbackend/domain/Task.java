@@ -2,9 +2,12 @@ package com.twilight.pointquestbackend.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
+
+import com.twilight.pointquestbackend.common.TaskStatus;
 import lombok.Data;
 
 /**
@@ -51,7 +54,7 @@ public class Task implements Serializable {
      * 
      */
     @TableField(value = "status")
-    private Object status;
+    private TaskStatus status;
 
     /**
      * 
@@ -79,6 +82,7 @@ public class Task implements Serializable {
     @TableField(value = "is_del")
     private Integer isDel;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

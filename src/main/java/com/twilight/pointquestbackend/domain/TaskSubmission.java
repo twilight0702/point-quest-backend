@@ -4,8 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
+
+import com.twilight.pointquestbackend.common.TaskSubmissionStatus;
 import lombok.Data;
 
 /**
@@ -39,12 +45,6 @@ public class TaskSubmission implements Serializable {
     /**
      * 
      */
-    @TableField(value = "evidence_url")
-    private String evidenceUrl;
-
-    /**
-     * 
-     */
     @TableField(value = "evidence_text")
     private String evidenceText;
 
@@ -52,20 +52,21 @@ public class TaskSubmission implements Serializable {
      * 
      */
     @TableField(value = "status")
-    private Object status;
+    private TaskSubmissionStatus status;
 
     /**
      * 
      */
     @TableField(value = "created_at")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

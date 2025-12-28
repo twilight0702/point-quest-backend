@@ -2,15 +2,19 @@ package com.twilight.pointquestbackend.service;
 
 import com.twilight.pointquestbackend.common.ServiceException;
 import com.twilight.pointquestbackend.config.StorageProperties;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
+import io.minio.http.Method;
+import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import java.io.InputStream;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.stream.StreamSupport;
+
+@Slf4j
 @Service
 public class MinioStorageService implements StorageService {
 
@@ -61,6 +65,49 @@ public class MinioStorageService implements StorageService {
             throw new ServiceException(500, "storage_public_url_not_configured");
         }
         return appendPath(base, "/" + minio.getBucket() + "/" + objectKey);
+    }
+
+    @Override
+    public String getSignedUrl(String objectKey, int expirySeconds) {
+        log.info("minio 配置：public-url={}", storageProperties.getMinio().getPublicUrl());
+        String bucket = storageProperties.getMinio().getBucket();
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .bucket(bucket)
+                            .object(objectKey)
+                            .method(Method.GET)
+                            .expiry(expirySeconds)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new ServiceException(500, "storage_signed_url_failed");
+        }
+    }
+
+    @Override
+    public List<String> listKeys(String prefix) {
+        Iterable<Result<Item>> results = minioClient.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(storageProperties.getMinio().getBucket())
+                        .prefix(prefix)
+                        .recursive(true)
+                        .build()
+        );
+
+        return StreamSupport.stream(results.spliterator(), false)
+                .map(result -> {
+                    try {
+                        return result.get().objectName();
+                    } catch (Exception e) {
+                        throw new ServiceException(
+                                500,
+                                "storage_list_failed",
+                                e
+                        );
+                    }
+                }).toList();
+
     }
 
     private String appendPath(String base, String path) {

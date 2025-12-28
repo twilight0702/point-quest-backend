@@ -12,6 +12,10 @@ spring:
       port: ${POINTQUEST_REDIS_PORT:6379}
       database: ${POINTQUEST_REDIS_DATABASE:0}
       timeout: 3s
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -37,5 +41,5 @@ storage:
     secret-key: admin123456
     bucket: pointquest
     region: ${POINTQUEST_MINIO_REGION:}
-    public-url: ${POINTQUEST_MINIO_PUBLIC_URL:}
+    public-url: http://127.0.0.1:9001/pointquest
     use-ssl: ${POINTQUEST_MINIO_USE_SSL:false}

@@ -1,6 +1,7 @@
 package com.twilight.pointquestbackend.service;
 
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * Abstraction for file/object storage.
@@ -25,4 +26,18 @@ public interface StorageService {
      * @return URL string
      */
     String getPublicUrl(String objectKey);
+
+    /**
+     * Build a temporary signed URL for the stored object.
+     *
+     * @param objectKey object key returned by {@link #store(String, InputStream, long, String)}
+     * @param expirySeconds expiry time in seconds
+     * @return signed URL string
+     */
+    String getSignedUrl(String objectKey, int expirySeconds);
+
+    /**
+     * 获取某前缀下的所有key
+     */
+    List<String> listKeys(String prefix);
 }

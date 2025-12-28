@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -37,6 +38,12 @@ public class GlobalExceptionHandler {
                 .map(this::formatFieldError)
                 .collect(Collectors.joining("; "));
         return ResponseEntity.badRequest().body(ApiResponse.failure(400, message));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        log.warn("Upload too large: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(ApiResponse.failure(400, "file_too_large"));
     }
 
     @ExceptionHandler(Exception.class)
