@@ -34,9 +34,9 @@ public class AdminPoolController {
         return ApiResponse.success(result);
     }
 
-    @GetMapping("/{id}")
-    public ApiResponse<PoolVO> getPool(@PathVariable Long id) {
-        return ApiResponse.success(poolService.getPool(id));
+    @GetMapping("/{poolNo}")
+    public ApiResponse<PoolVO> getPool(@PathVariable String poolNo) {
+        return ApiResponse.success(poolService.getPoolByNo(poolNo));
     }
 
     @PostMapping
@@ -45,15 +45,15 @@ public class AdminPoolController {
         return ApiResponse.success("pool_created", created);
     }
 
-    @PutMapping("/{id}")
-    public ApiResponse<PoolVO> updatePool(@PathVariable Long id, @Valid @RequestBody PoolRequest request) {
-        PoolVO updated = poolService.updatePool(id, request);
+    @PutMapping("/{poolNo}")
+    public ApiResponse<PoolVO> updatePool(@PathVariable String poolNo, @Valid @RequestBody PoolRequest request) {
+        PoolVO updated = poolService.updatePool(poolNo, request);
         return ApiResponse.success("pool_updated", updated);
     }
 
-    @DeleteMapping("/{id}")
-    public ApiResponse<Void> deletePool(@PathVariable Long id) {
-        poolService.deletePool(id);
+    @DeleteMapping("/{poolNo}")
+    public ApiResponse<Void> deletePool(@PathVariable String poolNo) {
+        poolService.deletePool(poolNo);
         return ApiResponse.onlySuccess("pool_deleted");
     }
 }

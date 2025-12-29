@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -31,6 +32,7 @@ import org.springframework.util.StringUtils;
 public class PoolService {
 
     private static final Set<String> ALLOWED_STATUS = Set.of("ON", "OFF");
+    private static final String DEFAULT_TYPE = "NORMAL";
 
     private final PoolMapper poolMapper;
     private final PoolItemMapper poolItemMapper;
@@ -63,7 +65,14 @@ public class PoolService {
     }
 
     public PoolVO getPool(Long id) {
-        Pool pool = requirePool(id);
+        Pool pool = requirePoolById(id);
+        Map<Long, List<PoolItem>> itemMap = loadItems(List.of(pool));
+        Map<Long, Reward> rewardMap = loadRewardsFromItems(itemMap);
+        return toVO(pool, itemMap.get(pool.getId()), rewardMap);
+    }
+
+    public PoolVO getPoolByNo(String poolNo) {
+        Pool pool = requirePoolByNo(poolNo);
         Map<Long, List<PoolItem>> itemMap = loadItems(List.of(pool));
         Map<Long, Reward> rewardMap = loadRewardsFromItems(itemMap);
         return toVO(pool, itemMap.get(pool.getId()), rewardMap);
@@ -74,6 +83,7 @@ public class PoolService {
         Pool pool = new Pool();
         applyRequest(pool, request, true);
         validateTimeRange(pool.getStartAt(), pool.getEndAt());
+        pool.setPoolNo(generateUniquePoolNo(null));
 
         int inserted = poolMapper.insert(pool);
         if (inserted != 1 || pool.getId() == null) {
@@ -84,28 +94,32 @@ public class PoolService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public PoolVO updatePool(Long id, PoolRequest request) {
-        Pool pool = requirePool(id);
+    public PoolVO updatePool(String poolNo, PoolRequest request) {
+        Pool pool = requirePoolByNo(poolNo);
         applyRequest(pool, request, false);
         validateTimeRange(pool.getStartAt(), pool.getEndAt());
         poolMapper.updateById(pool);
         replaceItems(pool.getId(), request.getItems());
-        return getPool(id);
+        return getPool(pool.getId());
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void deletePool(Long id) {
-        Pool pool = requirePool(id);
+    public void deletePool(String poolNo) {
+        Pool pool = requirePoolByNo(poolNo);
         poolItemMapper.delete(new LambdaQueryWrapper<PoolItem>().eq(PoolItem::getPoolId, pool.getId()));
         poolMapper.deleteById(pool.getId());
     }
 
     private void applyRequest(Pool pool, PoolRequest request, boolean creating) {
         pool.setTitle(request.getTitle());
+        pool.setDescription(request.getDescription());
+        pool.setPointCost(request.getPointCost());
         pool.setStartAt(request.getStartAt());
         pool.setEndAt(request.getEndAt());
         String fallback = creating ? "OFF" : pool.getStatus();
         pool.setStatus(resolveStatus(request.getStatus(), fallback));
+        String typeFallback = creating ? DEFAULT_TYPE : pool.getType();
+        pool.setType(resolveType(request.getType(), typeFallback));
     }
 
     private void replaceItems(Long poolId, List<PoolRequest.PoolItemRequest> items) {
@@ -130,6 +144,11 @@ public class PoolService {
             record.setPoolId(poolId);
             record.setRewardId(item.getRewardId());
             record.setSortNo(item.getSortNo() == null ? 0 : item.getSortNo());
+            Long weight = item.getWeight() == null ? 0L : item.getWeight();
+            if (weight < 0) {
+                throw new ServiceException(400, "pool_item_weight_invalid");
+            }
+            record.setWeight(weight);
             poolItemMapper.insert(record);
         }
     }
@@ -186,10 +205,14 @@ public class PoolService {
     private PoolVO toVO(Pool pool, List<PoolItem> items, Map<Long, Reward> rewardMap) {
         PoolVO vo = new PoolVO();
         vo.setId(pool.getId());
+        vo.setPoolNo(pool.getPoolNo());
         vo.setTitle(pool.getTitle());
+        vo.setDescription(pool.getDescription());
+        vo.setPointCost(pool.getPointCost());
         vo.setStartAt(pool.getStartAt());
         vo.setEndAt(pool.getEndAt());
         vo.setStatus(pool.getStatus());
+        vo.setType(pool.getType());
         vo.setCreatedAt(pool.getCreatedAt());
         vo.setUpdatedAt(pool.getUpdatedAt());
         if (!CollectionUtils.isEmpty(items)) {
@@ -205,6 +228,7 @@ public class PoolService {
                     itemVO.setRewardStatus(reward.getStatus());
                 }
                 itemVO.setSortNo(item.getSortNo());
+                itemVO.setWeight(item.getWeight());
                 itemVOS.add(itemVO);
             }
             vo.setItems(itemVOS);
@@ -220,12 +244,39 @@ public class PoolService {
         }
     }
 
-    private Pool requirePool(Long id) {
+    private Pool requirePoolById(Long id) {
         Pool pool = poolMapper.selectById(id);
         if (pool == null) {
             throw new ServiceException(404, "pool_not_found");
         }
         return pool;
+    }
+
+    private Pool requirePoolByNo(String poolNo) {
+        Pool pool = poolMapper.selectOne(new LambdaQueryWrapper<Pool>().eq(Pool::getPoolNo, poolNo));
+        if (pool == null) {
+            throw new ServiceException(404, "pool_not_found");
+        }
+        return pool;
+    }
+
+    private String generateUniquePoolNo(Long excludeId) {
+        for (int i = 0; i < 3; i++) {
+            String candidate = UUID.randomUUID().toString();
+            if (isPoolNoAvailable(candidate, excludeId)) {
+                return candidate;
+            }
+        }
+        throw new ServiceException(500, "pool_no_generate_failed");
+    }
+
+    private boolean isPoolNoAvailable(String poolNo, Long excludeId) {
+        LambdaQueryWrapper<Pool> wrapper = new LambdaQueryWrapper<Pool>().eq(Pool::getPoolNo, poolNo);
+        if (excludeId != null) {
+            wrapper.ne(Pool::getId, excludeId);
+        }
+        Long count = poolMapper.selectCount(wrapper);
+        return count == null || count == 0;
     }
 
     private String resolveStatus(String requested, String fallback) {
@@ -244,5 +295,15 @@ public class PoolService {
             throw new ServiceException(400, "invalid_pool_status");
         }
         return normalized;
+    }
+
+    private String resolveType(String requested, String fallback) {
+        if (StringUtils.hasText(requested)) {
+            return requested.trim().toUpperCase();
+        }
+        if (StringUtils.hasText(fallback)) {
+            return fallback.trim().toUpperCase();
+        }
+        return DEFAULT_TYPE;
     }
 }

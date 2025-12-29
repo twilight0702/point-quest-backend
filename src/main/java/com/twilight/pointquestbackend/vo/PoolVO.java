@@ -10,10 +10,14 @@ import lombok.Data;
 @Data
 public class PoolVO {
     private Long id;
+    private String poolNo;
     private String title;
+    private String description;
+    private Long pointCost;
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private String status;
+    private String type;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<PoolItemVO> items;
@@ -26,5 +30,6 @@ public class PoolVO {
         private Long pointCost;
         private String rewardStatus;
         private Integer sortNo;
+        private Long weight;
     }
 }

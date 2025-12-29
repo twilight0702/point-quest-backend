@@ -18,6 +18,12 @@ public class Pool implements Serializable {
     /**
      * 
      */
+    @TableField(value = "pool_no")
+    private String poolNo;
+
+    /**
+     * 
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
@@ -26,6 +32,24 @@ public class Pool implements Serializable {
      */
     @TableField(value = "title")
     private String title;
+
+    /**
+     * 
+     */
+    @TableField(value = "description")
+    private String description;
+
+    /**
+     * 
+     */
+    @TableField(value = "point_cost")
+    private Long pointCost;
+
+    /**
+     * 
+     */
+    @TableField(value = "type")
+    private String type;
 
     /**
      * 

@@ -38,6 +38,12 @@ public class PoolItem implements Serializable {
     @TableField(value = "sort_no")
     private Integer sortNo;
 
+    /**
+     * 
+     */
+    @TableField(value = "weight")
+    private Long weight;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

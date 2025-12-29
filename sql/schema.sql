@@ -112,7 +112,7 @@ CREATE TABLE reward
 (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(128)       NOT NULL,
-      reward_no   VARCHAR(64)        NOT NULL UNIQUE,
+    reward_no   VARCHAR(64)        NOT NULL UNIQUE,
     description TEXT,
     point_cost  BIGINT             NOT NULL CHECK (point_cost >= 0),
     status      ENUM ('ON', 'OFF') NOT NULL DEFAULT 'ON', -- 后端代码中枚举
@@ -154,13 +154,17 @@ CREATE TABLE reward_inventory
 DROP TABLE IF EXISTS pool;
 CREATE TABLE pool
 (
-    id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-    title      VARCHAR(128)       NOT NULL,
-    start_at   DATETIME,
-    end_at     DATETIME,
-    status     ENUM ('ON', 'OFF') NOT NULL DEFAULT 'OFF', -- 还需要抽卡花费配置 博饼？ 卡池类型
-    created_at TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    pool_no     VARCHAR(64)        NOT NULL UNIQUE,
+    title       VARCHAR(128)       NOT NULL,
+    description TEXT               NULL,
+    start_at    DATETIME,
+    end_at      DATETIME,
+    status      ENUM ('ON', 'OFF') NOT NULL DEFAULT 'OFF',
+    point_cost  BIGINT UNSIGNED    NOT NULL CHECK (point_cost >= 0) COMMENT '抽卡花费',
+    type        VARCHAR(32)        NOT NULL DEFAULT 'NORMAL' COMMENT '卡池类型',
+    created_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT ='活动奖池：定义活动窗口与奖池状态';
 
 DROP TABLE IF EXISTS pool_item;
@@ -170,6 +174,7 @@ CREATE TABLE pool_item
     pool_id   BIGINT NOT NULL,
     reward_id BIGINT NOT NULL,
     sort_no   INT    NOT NULL DEFAULT 0,
+    weight    BIGINT NOT NULL DEFAULT 0 COMMENT '权重',
     CONSTRAINT uq_pool_reward UNIQUE (pool_id, reward_id),
     CONSTRAINT fk_pool_item_pool FOREIGN KEY (pool_id) REFERENCES pool (id),
     CONSTRAINT fk_pool_item_reward FOREIGN KEY (reward_id) REFERENCES reward (id)
