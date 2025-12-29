@@ -238,4 +238,22 @@ CREATE TABLE message
 ) COMMENT ='站内消息表：用于用户间通知与已读状态';
 CREATE INDEX idx_message_receiver_read ON message (receiver_id, is_read, created_at);
 
+-- 池子抽卡记录
+DROP TABLE IF EXISTS pool_draw;
+CREATE TABLE pool_draw
+(
+    id                   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id              BIGINT    NOT NULL,
+    pool_id              BIGINT    NOT NULL,
+    reward_id            BIGINT    NOT NULL,
+    reward_name_snapshot VARCHAR(128),
+    reward_no_snapshot   VARCHAR(64),
+    point_cost           BIGINT    NOT NULL CHECK (point_cost >= 0),
+    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pool_draw_user FOREIGN KEY (user_id) REFERENCES users (id),
+    CONSTRAINT fk_pool_draw_pool FOREIGN KEY (pool_id) REFERENCES pool (id),
+    CONSTRAINT fk_pool_draw_reward FOREIGN KEY (reward_id) REFERENCES reward (id)
+) COMMENT = '卡池抽卡记录';
+CREATE INDEX idx_pool_draw_user_created ON pool_draw (user_id, created_at);
+
 SET FOREIGN_KEY_CHECKS = 1;
