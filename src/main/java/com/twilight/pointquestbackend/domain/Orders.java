@@ -42,8 +42,8 @@ public class Orders implements Serializable {
     /**
      * 
      */
-    @TableField(value = "address_json")
-    private Object address_json;
+    @TableField(value = "address")
+    private String address;
 
     /**
      * 

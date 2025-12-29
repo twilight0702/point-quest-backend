@@ -188,11 +188,10 @@ CREATE TABLE orders
     order_no     VARCHAR(64)      NOT NULL UNIQUE,
     user_id      BIGINT           NOT NULL,
     total_points BIGINT           NOT NULL CHECK (total_points >= 0),
-    address_json JSON             NOT NULL,
+    address      VARCHAR(255)     NULL,
     status       ENUM ('CREATED') NOT NULL DEFAULT 'CREATED',
     created_at   TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT chk_address_json_valid CHECK (JSON_VALID(address_json)),
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)
 ) COMMENT ='订单表：记录用户兑换订单与收货信息';
 CREATE INDEX idx_orders_user_created_at ON orders (user_id, created_at);

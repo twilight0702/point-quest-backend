@@ -64,6 +64,27 @@ public class PoolService {
         return result;
     }
 
+    public Page<PoolVO> pageVisiblePools(long page, long size) {
+        long current = Math.max(1, page);
+        long pageSize = Math.min(100, Math.max(1, size));
+        LocalDateTime now = LocalDateTime.now();
+        LambdaQueryWrapper<Pool> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Pool::getStatus, "ON")
+                .and(w -> w.isNull(Pool::getStartAt).or().le(Pool::getStartAt, now))
+                .and(w -> w.isNull(Pool::getEndAt).or().ge(Pool::getEndAt, now))
+                .orderByDesc(Pool::getCreatedAt);
+        Page<Pool> poolPage = poolMapper.selectPage(new Page<>(current, pageSize), wrapper);
+
+        Map<Long, List<PoolItem>> itemMap = loadItems(poolPage.getRecords());
+        Map<Long, Reward> rewardMap = loadRewardsFromItems(itemMap);
+        List<PoolVO> vos = poolPage.getRecords().stream()
+                .map(pool -> toVO(pool, itemMap.get(pool.getId()), rewardMap))
+                .toList();
+        Page<PoolVO> result = new Page<>(poolPage.getCurrent(), poolPage.getSize(), poolPage.getTotal());
+        result.setRecords(vos);
+        return result;
+    }
+
     public PoolVO getPool(Long id) {
         Pool pool = requirePoolById(id);
         Map<Long, List<PoolItem>> itemMap = loadItems(List.of(pool));
@@ -73,6 +94,19 @@ public class PoolService {
 
     public PoolVO getPoolByNo(String poolNo) {
         Pool pool = requirePoolByNo(poolNo);
+        Map<Long, List<PoolItem>> itemMap = loadItems(List.of(pool));
+        Map<Long, Reward> rewardMap = loadRewardsFromItems(itemMap);
+        return toVO(pool, itemMap.get(pool.getId()), rewardMap);
+    }
+
+    public PoolVO getVisiblePool(String poolNo) {
+        Pool pool = requirePoolByNo(poolNo);
+        LocalDateTime now = LocalDateTime.now();
+        boolean started = pool.getStartAt() == null || !pool.getStartAt().isAfter(now);
+        boolean notEnded = pool.getEndAt() == null || !pool.getEndAt().isBefore(now);
+        if (!"ON".equalsIgnoreCase(pool.getStatus()) || !started || !notEnded) {
+            throw new ServiceException(404, "pool_not_found");
+        }
         Map<Long, List<PoolItem>> itemMap = loadItems(List.of(pool));
         Map<Long, Reward> rewardMap = loadRewardsFromItems(itemMap);
         return toVO(pool, itemMap.get(pool.getId()), rewardMap);

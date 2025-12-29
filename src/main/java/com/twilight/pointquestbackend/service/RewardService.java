@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -77,8 +78,72 @@ public class RewardService {
         return result;
     }
 
+    /**
+     * Public reward list for the web client. Only rewards that are ON are returned and
+     * optional filters are applied.
+     */
+    public Page<RewardVO> searchVisibleRewards(long page,
+                                               long size,
+                                               String keyword,
+                                               Long categoryId,
+                                               Boolean onlyInStock) {
+        long current = Math.max(1, page);
+        long pageSize = Math.min(100, Math.max(1, size));
+        LambdaQueryWrapper<Reward> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Reward::getStatus, "ON");
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(w -> w.like(Reward::getName, keyword)
+                    .or()
+                    .like(Reward::getRewardNo, keyword));
+        }
+        if (categoryId != null) {
+            Set<Long> rewardIds = rewardCategoryMapper.selectList(
+                            new LambdaQueryWrapper<RewardCategory>().eq(RewardCategory::getCategoryId, categoryId))
+                    .stream()
+                    .map(RewardCategory::getRewardId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (CollectionUtils.isEmpty(rewardIds)) {
+                return emptyRewardPage(current, pageSize);
+            }
+            wrapper.in(Reward::getId, rewardIds);
+        }
+        if (Boolean.TRUE.equals(onlyInStock)) {
+            Set<Long> rewardIds = rewardInventoryMapper.selectList(
+                            new LambdaQueryWrapper<RewardInventory>().gt(RewardInventory::getStock, 0))
+                    .stream()
+                    .map(RewardInventory::getRewardId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (CollectionUtils.isEmpty(rewardIds)) {
+                return emptyRewardPage(current, pageSize);
+            }
+            wrapper.in(Reward::getId, rewardIds);
+        }
+        wrapper.orderByDesc(Reward::getCreatedAt);
+        Page<Reward> rewardPage = rewardMapper.selectPage(new Page<>(current, pageSize), wrapper);
+        Map<Long, Integer> inventoryMap = loadInventory(rewardPage.getRecords());
+        CategoryInfo categoryInfo = loadCategories(rewardPage.getRecords());
+        List<RewardVO> vos = rewardPage.getRecords().stream()
+                .map(r -> toVO(r, inventoryMap, categoryInfo))
+                .toList();
+        Page<RewardVO> result = new Page<>(rewardPage.getCurrent(), rewardPage.getSize(), rewardPage.getTotal());
+        result.setRecords(vos);
+        return result;
+    }
+
     public RewardVO getReward(String rewardNo) {
         Reward reward = requireReward(rewardNo);
+        Map<Long, Integer> inventoryMap = loadInventory(List.of(reward));
+        CategoryInfo categoryInfo = loadCategories(List.of(reward));
+        return toVO(reward, inventoryMap, categoryInfo);
+    }
+
+    public RewardVO getVisibleReward(String rewardNo) {
+        Reward reward = requireReward(rewardNo);
+        if (!"ON".equalsIgnoreCase(reward.getStatus())) {
+            throw new ServiceException(404, "reward_not_found");
+        }
         Map<Long, Integer> inventoryMap = loadInventory(List.of(reward));
         CategoryInfo categoryInfo = loadCategories(List.of(reward));
         return toVO(reward, inventoryMap, categoryInfo);
@@ -345,5 +410,11 @@ public class RewardService {
     }
 
     private record CategoryInfo(Map<Long, List<Long>> ids, Map<Long, List<String>> names) {
+    }
+
+    private Page<RewardVO> emptyRewardPage(long current, long size) {
+        Page<RewardVO> empty = new Page<>(current, size, 0);
+        empty.setRecords(List.of());
+        return empty;
     }
 }
