@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -25,13 +27,13 @@ public class SubmissionReview implements Serializable {
      * 
      */
     @TableField(value = "submission_id")
-    private Long submission_id;
+    private Long submissionId;
 
     /**
      * 
      */
     @TableField(value = "reviewer_id")
-    private Long reviewer_id;
+    private Long reviewerId;
 
     /**
      * 
@@ -43,13 +45,13 @@ public class SubmissionReview implements Serializable {
      * 
      */
     @TableField(value = "points_awarded")
-    private Long points_awarded;
+    private Long pointsAwarded;
 
     /**
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private LocalDateTime createdAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

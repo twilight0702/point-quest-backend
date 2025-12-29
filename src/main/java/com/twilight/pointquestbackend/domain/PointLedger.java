@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 /**
@@ -25,7 +26,7 @@ public class PointLedger implements Serializable {
      * 
      */
     @TableField(value = "user_id")
-    private Long user_id;
+    private Long userId;
 
     /**
      * 
@@ -37,13 +38,13 @@ public class PointLedger implements Serializable {
      * 
      */
     @TableField(value = "ref_type")
-    private Object ref_type;
+    private Object refType;
 
     /**
      * 
      */
     @TableField(value = "ref_id")
-    private Long ref_id;
+    private Long refId;
 
     /**
      * 
@@ -55,7 +56,7 @@ public class PointLedger implements Serializable {
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private LocalDateTime createdAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -34,6 +34,10 @@ public class TaskService {
             String normalized = normalizeStatus(status);
             wrapper.eq(Task::getStatus, normalized);
         }
+        else{
+            wrapper.eq(Task::getStatus, TaskStatus.OPEN.name());
+        }
+
         wrapper.orderByDesc(Task::getCreatedAt);
         return taskMapper.selectPage(new Page<>(current, pageSize), wrapper);
     }

@@ -1,8 +1,6 @@
 package com.twilight.pointquestbackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twilight.pointquestbackend.common.ServiceException;
 import com.twilight.pointquestbackend.domain.OrderItem;
 import com.twilight.pointquestbackend.domain.Orders;
@@ -18,10 +16,8 @@ import com.twilight.pointquestbackend.mapper.RewardMapper;
 import com.twilight.pointquestbackend.security.UserPrincipal;
 import com.twilight.pointquestbackend.vo.CheckoutResultVO;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,7 +91,7 @@ public class CheckoutService {
         }
 
         PointAccount account = pointAccountMapper.selectOne(
-                new LambdaQueryWrapper<PointAccount>().eq(PointAccount::getUser_id, principal.getId()));
+                new LambdaQueryWrapper<PointAccount>().eq(PointAccount::getUserId, principal.getId()));
         if (account == null) {
             throw new ServiceException(500, "point_account_missing");
         }
@@ -133,9 +129,9 @@ public class CheckoutService {
         }
 
         Orders order = new Orders();
-        order.setOrder_no(generateOrderNo());
-        order.setUser_id(principal.getId());
-        order.setTotal_points(totalPoints);
+        order.setOrderNo(generateOrderNo());
+        order.setUserId(principal.getId());
+        order.setTotalPoints(totalPoints);
         order.setAddress(request.getAddress());
         order.setStatus("CREATED");
         ordersMapper.insert(order);
@@ -146,10 +142,10 @@ public class CheckoutService {
         for (Map.Entry<Long, Integer> entry : cartEntries.entrySet()) {
             Reward reward = rewardMap.get(entry.getKey());
             OrderItem item = new OrderItem();
-            item.setOrder_id(order.getId());
-            item.setReward_id(reward.getId());
-            item.setReward_name_snapshot(reward.getName());
-            item.setPoint_cost_snapshot(reward.getPointCost());
+            item.setOrderId(order.getId());
+            item.setRewardId(reward.getId());
+            item.setRewardNameSnapshot(reward.getName());
+            item.setPointCostSnapshot(reward.getPointCost());
             item.setQty(entry.getValue());
             orderItemMapper.insert(item);
         }
@@ -157,7 +153,7 @@ public class CheckoutService {
         cartService.clearCart(principal.getId());
 
         CheckoutResultVO result = new CheckoutResultVO();
-        result.setOrderNo(order.getOrder_no());
+        result.setOrderNo(order.getOrderNo());
         result.setTotalPoints(totalPoints);
         return result;
     }

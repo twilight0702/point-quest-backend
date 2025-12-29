@@ -78,7 +78,7 @@ public class PoolDrawService {
         }
 
         PointAccount account = pointAccountMapper.selectOne(
-                new LambdaQueryWrapper<PointAccount>().eq(PointAccount::getUser_id, principal.getId()));
+                new LambdaQueryWrapper<PointAccount>().eq(PointAccount::getUserId, principal.getId()));
         if (account == null) {
             throw new ServiceException(500, "point_account_missing");
         }

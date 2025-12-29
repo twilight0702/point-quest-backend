@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 
@@ -25,25 +26,25 @@ public class Payment implements Serializable {
      * 
      */
     @TableField(value = "order_id")
-    private Long order_id;
+    private Long orderId;
 
     /**
      * 
      */
     @TableField(value = "card_last4")
-    private String card_last4;
+    private String cardLast4;
 
     /**
      * 
      */
     @TableField(value = "pay_method")
-    private Object pay_method;
+    private Object payMethod;
 
     /**
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private LocalDateTime createdAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

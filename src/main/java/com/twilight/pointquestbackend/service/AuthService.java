@@ -16,8 +16,6 @@ import com.twilight.pointquestbackend.security.UserPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-
 @Service
 public class AuthService {
     private final AdminUserMapper adminUserMapper;
@@ -73,7 +71,7 @@ public class AuthService {
 
     private void createPointAccountForUser(Long userId) {
         PointAccount account = new PointAccount();
-        account.setUser_id(userId);
+        account.setUserId(userId);
         account.setBalance(0L);
         pointAccountMapper.insert(account);
     }

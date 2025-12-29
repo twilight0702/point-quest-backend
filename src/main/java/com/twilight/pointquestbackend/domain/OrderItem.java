@@ -24,25 +24,25 @@ public class OrderItem implements Serializable {
      * 
      */
     @TableField(value = "order_id")
-    private Long order_id;
+    private Long orderId;
 
     /**
      * 
      */
     @TableField(value = "reward_id")
-    private Long reward_id;
+    private Long rewardId;
 
     /**
      * 
      */
     @TableField(value = "reward_name_snapshot")
-    private String reward_name_snapshot;
+    private String rewardNameSnapshot;
 
     /**
      * 
      */
     @TableField(value = "point_cost_snapshot")
-    private Long point_cost_snapshot;
+    private Long pointCostSnapshot;
 
     /**
      * 

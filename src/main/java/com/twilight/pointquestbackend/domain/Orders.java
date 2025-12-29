@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 /**
@@ -25,19 +26,19 @@ public class Orders implements Serializable {
      * 
      */
     @TableField(value = "order_no")
-    private String order_no;
+    private String orderNo;
 
     /**
      * 
      */
     @TableField(value = "user_id")
-    private Long user_id;
+    private Long userId;
 
     /**
      * 
      */
     @TableField(value = "total_points")
-    private Long total_points;
+    private Long totalPoints;
 
     /**
      * 
@@ -55,13 +56,13 @@ public class Orders implements Serializable {
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private LocalDateTime createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updated_at;
+    private LocalDateTime updatedAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

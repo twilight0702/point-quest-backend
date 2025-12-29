@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -89,10 +90,10 @@ public class SubmissionReviewService {
         long points = resolvePoints(request, task);
 
         SubmissionReview review = new SubmissionReview();
-        review.setSubmission_id(submission.getId());
-        review.setReviewer_id(reviewer.getId());
+        review.setSubmissionId(submission.getId());
+        review.setReviewerId(reviewer.getId());
         review.setComment(request.getComment());
-        review.setPoints_awarded(points);
+        review.setPointsAwarded(points);
         int inserted = submissionReviewMapper.insert(review);
         if (inserted != 1) {
             throw new ServiceException(500, "create_review_failed");
@@ -116,10 +117,10 @@ public class SubmissionReviewService {
         Task task = requireTask(submission.getTaskId());
 
         SubmissionReview review = new SubmissionReview();
-        review.setSubmission_id(submission.getId());
-        review.setReviewer_id(reviewer.getId());
+        review.setSubmissionId(submission.getId());
+        review.setReviewerId(reviewer.getId());
         review.setComment(request.getComment());
-        review.setPoints_awarded(0L);
+        review.setPointsAwarded(0L);
         int inserted = submissionReviewMapper.insert(review);
         if (inserted != 1) {
             throw new ServiceException(500, "create_review_failed");
@@ -144,7 +145,7 @@ public class SubmissionReviewService {
 
     private void increaseUserPoints(TaskSubmission submission, long points) {
         PointAccount account = pointAccountMapper.selectOne(
-                new LambdaQueryWrapper<PointAccount>().eq(PointAccount::getUser_id, submission.getUserId()));
+                new LambdaQueryWrapper<PointAccount>().eq(PointAccount::getUserId, submission.getUserId()));
         if (account == null) {
             throw new ServiceException(500, "point_account_missing");
         }
@@ -154,10 +155,10 @@ public class SubmissionReviewService {
 
     private void writeLedger(TaskSubmission submission, long points, String remark) {
         PointLedger ledger = new PointLedger();
-        ledger.setUser_id(submission.getUserId());
+        ledger.setUserId(submission.getUserId());
         ledger.setDelta(points);
-        ledger.setRef_type("SUBMISSION");
-        ledger.setRef_id(submission.getId());
+        ledger.setRefType("SUBMISSION");
+        ledger.setRefId(submission.getId());
         ledger.setRemark(remark);
         pointLedgerMapper.insert(ledger);
     }
@@ -219,11 +220,11 @@ public class SubmissionReviewService {
 
     private void sendMessage(Long receiverId, String title, String content) {
         Message message = new Message();
-        message.setReceiver_id(receiverId);
+        message.setReceiverId(receiverId);
         message.setTitle(title);
         message.setContent(content);
-        message.setIs_read(0);
-        message.setCreated_at(new Date());
+        message.setIsRead(0);
+        message.setCreatedAt(LocalDateTime.now());
         messageMapper.insert(message);
     }
 }
