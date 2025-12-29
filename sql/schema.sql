@@ -189,7 +189,7 @@ CREATE TABLE orders
     user_id      BIGINT           NOT NULL,
     total_points BIGINT           NOT NULL CHECK (total_points >= 0),
     address      VARCHAR(255)     NULL,
-    status       ENUM ('CREATED') NOT NULL DEFAULT 'CREATED',
+    status       ENUM ('CREATED', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'CREATED',
     created_at   TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)

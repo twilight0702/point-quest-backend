@@ -50,7 +50,7 @@ public class Orders implements Serializable {
      * 
      */
     @TableField(value = "status")
-    private Object status;
+    private String status;
 
     /**
      * 

@@ -1,6 +1,7 @@
 package com.twilight.pointquestbackend.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.twilight.pointquestbackend.common.OrderStatus;
 import com.twilight.pointquestbackend.common.ServiceException;
 import com.twilight.pointquestbackend.domain.OrderItem;
 import com.twilight.pointquestbackend.domain.Orders;
@@ -133,7 +134,7 @@ public class CheckoutService {
         order.setUserId(principal.getId());
         order.setTotalPoints(totalPoints);
         order.setAddress(request.getAddress());
-        order.setStatus("CREATED");
+        order.setStatus(OrderStatus.CREATED.name());
         ordersMapper.insert(order);
         if (order.getId() == null) {
             throw new ServiceException(500, "order_create_failed");

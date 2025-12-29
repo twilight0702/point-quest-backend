@@ -137,7 +137,7 @@ public class UserProfileService {
         OrderSummaryVO vo = new OrderSummaryVO();
         vo.setOrderNo(order.getOrderNo());
         vo.setTotalPoints(order.getTotalPoints());
-        vo.setStatus(order.getStatus() == null ? null : order.getStatus().toString());
+        vo.setStatus(order.getStatus());
         vo.setCreatedAt(order.getCreatedAt());
         int itemCount = 0;
         if (items != null) {
@@ -155,7 +155,7 @@ public class UserProfileService {
         OrderDetailVO vo = new OrderDetailVO();
         vo.setOrderNo(order.getOrderNo());
         vo.setTotalPoints(order.getTotalPoints());
-        vo.setStatus(order.getStatus() == null ? null : order.getStatus().toString());
+        vo.setStatus(order.getStatus());
         vo.setCreatedAt(order.getCreatedAt());
         vo.setAddress(order.getAddress());
         List<OrderItemVO> itemVOs = Collections.emptyList();
