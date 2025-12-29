@@ -1,11 +1,10 @@
 package com.twilight.pointquestbackend.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -19,7 +18,7 @@ public class RewardInventory implements Serializable {
      * 
      */
     @TableId(value = "reward_id")
-    private Long reward_id;
+    private Long rewardId;
 
     /**
      * 
@@ -37,7 +36,7 @@ public class RewardInventory implements Serializable {
      * 
      */
     @TableField(value = "updated_at")
-    private Date updated_at;
+    private LocalDateTime updatedAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

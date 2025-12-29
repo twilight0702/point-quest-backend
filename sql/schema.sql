@@ -112,14 +112,33 @@ CREATE TABLE reward
 (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(128)       NOT NULL,
-    code        VARCHAR(64)        NOT NULL UNIQUE,
+      reward_no   VARCHAR(64)        NOT NULL UNIQUE,
     description TEXT,
     point_cost  BIGINT             NOT NULL CHECK (point_cost >= 0),
-    category    VARCHAR(64),
-    status      ENUM ('ON', 'OFF') NOT NULL DEFAULT 'ON',
+    status      ENUM ('ON', 'OFF') NOT NULL DEFAULT 'ON', -- 后端代码中枚举
     created_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_del      TINYINT(1)         NOT NULL DEFAULT 0
 ) COMMENT ='兑换商品表：维护奖品信息、分类与上下架状态';
+
+-- Reward categories
+DROP TABLE IF EXISTS category;
+CREATE TABLE category
+(
+    id   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(64) NOT NULL UNIQUE
+) COMMENT ='Reward category definitions';
+
+-- Reward-category relation
+DROP TABLE IF EXISTS reward_category;
+CREATE TABLE reward_category
+(
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    reward_id   BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
+    CONSTRAINT fk_reward_category_reward FOREIGN KEY (reward_id) REFERENCES reward (id),
+    CONSTRAINT fk_reward_category_category FOREIGN KEY (category_id) REFERENCES category (id)
+) COMMENT ='Mapping between reward and category';
 
 DROP TABLE IF EXISTS reward_inventory;
 CREATE TABLE reward_inventory
@@ -139,7 +158,7 @@ CREATE TABLE pool
     title      VARCHAR(128)       NOT NULL,
     start_at   DATETIME,
     end_at     DATETIME,
-    status     ENUM ('ON', 'OFF') NOT NULL DEFAULT 'OFF',
+    status     ENUM ('ON', 'OFF') NOT NULL DEFAULT 'OFF', -- 还需要抽卡花费配置 博饼？ 卡池类型
     created_at TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT ='活动奖池：定义活动窗口与奖池状态';

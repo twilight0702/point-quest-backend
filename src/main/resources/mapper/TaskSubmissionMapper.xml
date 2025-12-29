@@ -6,7 +6,7 @@
     </sql>
 
     <sql id="baseColumn">
-        id,task_id,user_id,evidence_url,evidence_text,status,created_at,updated_at
+        id,submission_no,task_id,user_id,evidence_text,status,created_at,updated_at
     </sql>
 
     <select id="pageSubmissions"

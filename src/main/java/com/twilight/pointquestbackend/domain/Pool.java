@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
@@ -31,31 +31,31 @@ public class Pool implements Serializable {
      * 
      */
     @TableField(value = "start_at")
-    private Date start_at;
+    private LocalDateTime startAt;
 
     /**
      * 
      */
     @TableField(value = "end_at")
-    private Date end_at;
+    private LocalDateTime endAt;
 
     /**
      * 
      */
     @TableField(value = "status")
-    private Object status;
+    private String status;
 
     /**
      * 
      */
     @TableField(value = "created_at")
-    private Date created_at;
+    private LocalDateTime createdAt;
 
     /**
      * 
      */
     @TableField(value = "updated_at")
-    private Date updated_at;
+    private LocalDateTime updatedAt;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

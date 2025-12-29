@@ -7,4 +7,9 @@ INSERT INTO `point_account` VALUES (2, 2, 0, '2025-12-28 00:49:56');
 
 INSERT INTO `users` VALUES (2, '123', 's.dpgbu@dbmcxsnu.pk', '$2a$10$cvIwjYpgubBMTuxrgSCSOuoK5cFMbx7t.Fg32xCS3xU35wzogrmjm', '2025-12-28 00:49:56', '2025-12-28 00:49:56');
 
+INSERT INTO `category` (name)
+VALUES
+  ('测试类目1'),
+  ('测试类目2');
+
 SET FOREIGN_KEY_CHECKS = 1;
