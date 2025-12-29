@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.twilight.pointquestbackend.common.ApiResponse;
 import com.twilight.pointquestbackend.dto.RewardRequest;
 import com.twilight.pointquestbackend.service.RewardService;
+import com.twilight.pointquestbackend.vo.AllCategoriesVO;
 import com.twilight.pointquestbackend.vo.RewardVO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,5 +58,29 @@ public class AdminRewardController {
     public ApiResponse<Void> deleteReward(@PathVariable String rewardNo) {
         rewardService.deleteReward(rewardNo);
         return ApiResponse.onlySuccess("reward_deleted");
+    }
+
+    @GetMapping("/all-category")
+    public ApiResponse<AllCategoriesVO> getAllCategories() {
+        AllCategoriesVO allCategoriesVO = rewardService.getAllCategories();
+        return ApiResponse.success(allCategoriesVO);
+    }
+
+    @PostMapping("/category")
+    public ApiResponse<Void> addCategory(@RequestBody String categoryName) {
+        rewardService.addCategory(categoryName);
+        return ApiResponse.onlySuccess("category_added");
+    }
+
+    @PutMapping("/category/{categoryId}")
+    public ApiResponse<Void> updateCategory(@PathVariable Long categoryId, @RequestBody String categoryName) {
+        rewardService.updateCategory(categoryId, categoryName);
+        return ApiResponse.onlySuccess("category_updated");
+    }
+
+    @DeleteMapping("/category/{categoryId}")
+    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId) {
+        rewardService.deleteCategory(categoryId);
+        return ApiResponse.onlySuccess("category_deleted");
     }
 }

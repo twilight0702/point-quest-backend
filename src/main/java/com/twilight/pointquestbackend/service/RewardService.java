@@ -14,6 +14,7 @@ import com.twilight.pointquestbackend.mapper.PoolItemMapper;
 import com.twilight.pointquestbackend.mapper.RewardCategoryMapper;
 import com.twilight.pointquestbackend.mapper.RewardInventoryMapper;
 import com.twilight.pointquestbackend.mapper.RewardMapper;
+import com.twilight.pointquestbackend.vo.AllCategoriesVO;
 import com.twilight.pointquestbackend.vo.RewardVO;
 import java.util.UUID;
 import java.util.Collections;
@@ -310,6 +311,31 @@ public class RewardService {
         if (count == null || count != categoryIds.size()) {
             throw new ServiceException(404, "category_not_found");
         }
+    }
+
+    public AllCategoriesVO getAllCategories() {
+        List<Category> categories = categoryMapper.selectList(null);
+
+        AllCategoriesVO allCategoriesVO = new AllCategoriesVO();
+        allCategoriesVO.setCategories(categories);
+        return allCategoriesVO;
+    }
+
+    public void addCategory(String categoryName) {
+        Category category = new Category();
+        category.setName(categoryName);
+        categoryMapper.insert(category);
+    }
+
+    public void deleteCategory(Long categoryId) {
+        categoryMapper.deleteById(categoryId);
+    }
+
+    public void updateCategory(Long categoryId, String categoryName) {
+        Category category = new Category();
+        category.setId(categoryId);
+        category.setName(categoryName);
+        categoryMapper.updateById(category);
     }
 
     private record CategoryInfo(Map<Long, List<Long>> ids, Map<Long, List<String>> names) {
