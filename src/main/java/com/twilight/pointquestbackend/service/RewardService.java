@@ -104,7 +104,10 @@ public class RewardService {
         applyRequest(reward, request, false);
         rewardMapper.updateById(reward);
         upsertInventory(reward.getId(), resolveStock(request.getStock()));
-        replaceCategories(reward.getId(), request.getCategoryIds());
+        // Only adjust categories when the client sends the field; null means "no change"
+        if (request.getCategoryIds() != null) {
+            replaceCategories(reward.getId(), request.getCategoryIds());
+        }
         return getReward(rewardNo);
     }
 
@@ -176,6 +179,9 @@ public class RewardService {
     }
 
     private void replaceCategories(Long rewardId, List<Long> categoryIds) {
+        if (categoryIds == null) {
+            return;
+        }
         rewardCategoryMapper.delete(
                 new LambdaQueryWrapper<RewardCategory>().eq(RewardCategory::getRewardId, rewardId));
         if (CollectionUtils.isEmpty(categoryIds)) {
