@@ -1,4 +1,4 @@
-﻿package com.twilight.pointquestbackend.service;
+package com.twilight.pointquestbackend.service;
 
 import com.twilight.pointquestbackend.common.ServiceException;
 import com.twilight.pointquestbackend.config.StorageProperties;

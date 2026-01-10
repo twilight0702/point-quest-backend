@@ -2,12 +2,15 @@ package com.twilight.pointquestbackend.controller.web;
 
 import com.twilight.pointquestbackend.common.ApiResponse;
 import com.twilight.pointquestbackend.dto.AdminLoginDTO;
+import com.twilight.pointquestbackend.dto.ForgotPasswordRequestDTO;
 import com.twilight.pointquestbackend.vo.auth.AuthVO;
 import com.twilight.pointquestbackend.dto.LoginDTO;
+import com.twilight.pointquestbackend.dto.ResetPasswordDTO;
 import com.twilight.pointquestbackend.dto.RegisterDTO;
 import com.twilight.pointquestbackend.security.JwtService;
 import com.twilight.pointquestbackend.security.UserPrincipal;
 import com.twilight.pointquestbackend.service.AuthService;
+import com.twilight.pointquestbackend.service.PasswordResetService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,10 +23,14 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService,
+                          JwtService jwtService,
+                          PasswordResetService passwordResetService) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
@@ -45,5 +52,17 @@ public class AuthController {
         UserPrincipal principal = authService.loginAdmin(request);
         String token = jwtService.generateToken(principal);
         return ApiResponse.success("login_success", new AuthVO(token));
+    }
+
+    @PostMapping("/forgot-password/request")
+    public ApiResponse<Void> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequestDTO request) {
+        passwordResetService.requestReset(request.getEmail());
+        return ApiResponse.onlySuccess("forgot_password_requested");
+    }
+
+    @PostMapping("/forgot-password/reset")
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordDTO request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ApiResponse.onlySuccess("password_reset_success");
     }
 }
