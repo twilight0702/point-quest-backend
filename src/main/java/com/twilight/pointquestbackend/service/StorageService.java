@@ -51,6 +51,8 @@ public interface StorageService {
      */
     String getSignedUrl(String objectKey, int expirySeconds);
 
+    void delete(String objectKey);
+
     /**
      * 获取某前缀下的所有key
      */

@@ -5,8 +5,10 @@ import com.twilight.pointquestbackend.common.ApiResponse;
 import com.twilight.pointquestbackend.dto.RewardRequest;
 import com.twilight.pointquestbackend.service.RewardService;
 import com.twilight.pointquestbackend.vo.AllCategoriesVO;
+import com.twilight.pointquestbackend.vo.RewardImageVO;
 import com.twilight.pointquestbackend.vo.RewardVO;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +17,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/admin/rewards")
@@ -58,6 +62,25 @@ public class AdminRewardController {
     public ApiResponse<Void> deleteReward(@PathVariable String rewardNo) {
         rewardService.deleteReward(rewardNo);
         return ApiResponse.onlySuccess("reward_deleted");
+    }
+
+    @PostMapping(value = "/{rewardNo}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<RewardImageVO> uploadRewardImage(@PathVariable String rewardNo,
+                                                        @RequestPart("file") MultipartFile file) {
+        RewardImageVO image = rewardService.uploadRewardImage(rewardNo, file);
+        return ApiResponse.success("reward_image_uploaded", image);
+    }
+
+    @GetMapping("/{rewardNo}/images")
+    public ApiResponse<java.util.List<RewardImageVO>> listRewardImages(@PathVariable String rewardNo) {
+        return ApiResponse.success(rewardService.getRewardImages(rewardNo));
+    }
+
+    @DeleteMapping("/{rewardNo}/image")
+    public ApiResponse<Void> deleteRewardImage(@PathVariable String rewardNo,
+                                               @RequestParam("objectKey") String objectKey) {
+        rewardService.deleteRewardImage(rewardNo, objectKey);
+        return ApiResponse.onlySuccess("reward_image_deleted");
     }
 
     @GetMapping("/all-category")

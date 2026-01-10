@@ -16,6 +16,10 @@ public class RewardVO {
     private Long pointCost;
     private String status;
     private Integer stock;
+    /**
+     * Signed URLs for all uploaded images of this reward.
+     */
+    private List<String> imageUrls;
     private List<Long> categoryIds;
     private List<String> categoryNames;
     private LocalDateTime createdAt;

@@ -1,8 +1,15 @@
-package com.twilight.pointquestbackend.service;
+﻿package com.twilight.pointquestbackend.service;
 
 import com.twilight.pointquestbackend.common.ServiceException;
 import com.twilight.pointquestbackend.config.StorageProperties;
-import io.minio.*;
+import io.minio.BucketExistsArgs;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.ListObjectsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.Result;
 import io.minio.http.Method;
 import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
@@ -91,6 +98,21 @@ public class MinioStorageService implements StorageService {
             );
         } catch (Exception e) {
             throw new ServiceException(500, "storage_signed_url_failed");
+        }
+    }
+
+    @Override
+    public void delete(String objectKey) {
+        String bucket = storageProperties.getMinio().getBucket();
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(objectKey)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new ServiceException(500, "storage_delete_failed");
         }
     }
 

@@ -15,8 +15,10 @@ import com.twilight.pointquestbackend.mapper.RewardCategoryMapper;
 import com.twilight.pointquestbackend.mapper.RewardInventoryMapper;
 import com.twilight.pointquestbackend.mapper.RewardMapper;
 import com.twilight.pointquestbackend.vo.AllCategoriesVO;
+import com.twilight.pointquestbackend.vo.RewardImageVO;
 import com.twilight.pointquestbackend.vo.RewardVO;
 import java.util.UUID;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,32 +27,41 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class RewardService {
 
     private static final Set<String> ALLOWED_STATUS = Set.of("ON", "OFF");
+    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/webp");
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final String IMAGE_PREFIX = "reward-images/";
+    private static final int SIGNED_URL_EXPIRY_SECONDS = 3600;
 
     private final RewardMapper rewardMapper;
     private final RewardInventoryMapper rewardInventoryMapper;
     private final RewardCategoryMapper rewardCategoryMapper;
     private final PoolItemMapper poolItemMapper;
     private final CategoryMapper categoryMapper;
+    private final StorageService storageService;
 
     public RewardService(RewardMapper rewardMapper,
                          RewardInventoryMapper rewardInventoryMapper,
                          RewardCategoryMapper rewardCategoryMapper,
                          PoolItemMapper poolItemMapper,
-                         CategoryMapper categoryMapper) {
+                         CategoryMapper categoryMapper,
+                         StorageService storageService) {
         this.rewardMapper = rewardMapper;
         this.rewardInventoryMapper = rewardInventoryMapper;
         this.rewardCategoryMapper = rewardCategoryMapper;
         this.poolItemMapper = poolItemMapper;
         this.categoryMapper = categoryMapper;
+        this.storageService = storageService;
     }
 
     public Page<RewardVO> pageRewards(long page, long size, String status, String keyword) {
@@ -147,6 +158,64 @@ public class RewardService {
         Map<Long, Integer> inventoryMap = loadInventory(List.of(reward));
         CategoryInfo categoryInfo = loadCategories(List.of(reward));
         return toVO(reward, inventoryMap, categoryInfo);
+    }
+
+    /**
+     * Upload one image for a reward; multiple images per reward are allowed.
+     *
+     * @param rewardNo reward identifier
+     * @param file     image file
+     * @return signed URL of the uploaded image
+     */
+    public RewardImageVO uploadRewardImage(String rewardNo, MultipartFile file) {
+        Reward reward = requireReward(rewardNo);
+        validateImage(file);
+        String objectKey = buildImageObjectKey(reward.getRewardNo(), file.getOriginalFilename(), file.getContentType());
+
+        Map<String, String> metadata = new HashMap<>();
+        if (StringUtils.hasText(file.getOriginalFilename())) {
+            metadata.put("original-filename", file.getOriginalFilename());
+        }
+        try (var inputStream = file.getInputStream()) {
+            storageService.store(objectKey, inputStream, file.getSize(), file.getContentType(), metadata);
+        } catch (IOException e) {
+            throw new ServiceException(500, "storage_upload_failed");
+        }
+        String signedUrl = storageService.getSignedUrl(objectKey, SIGNED_URL_EXPIRY_SECONDS);
+        return new RewardImageVO(objectKey, signedUrl);
+    }
+
+    /**
+     * Public read-only accessor for reward images.
+     */
+    public List<String> getRewardImageUrls(String rewardNo) {
+        requireReward(rewardNo);
+        return resolveRewardImageUrls(rewardNo);
+    }
+
+    /**
+     * Admin-only accessor listing all images (with object keys).
+     */
+    public List<RewardImageVO> getRewardImages(String rewardNo) {
+        requireReward(rewardNo);
+        return resolveRewardImages(rewardNo);
+    }
+
+    public void deleteRewardImage(String rewardNo, String objectKey) {
+        if (!StringUtils.hasText(objectKey)) {
+            throw new ServiceException(400, "image_key_required");
+        }
+        Reward reward = requireReward(rewardNo);
+        String prefix = IMAGE_PREFIX + reward.getRewardNo() + "/";
+        if (!objectKey.startsWith(prefix)) {
+            throw new ServiceException(400, "invalid_image_key");
+        }
+        List<String> existingKeys = storageService.listKeys(prefix);
+        boolean exists = existingKeys.stream().anyMatch(k -> k.equals(objectKey));
+        if (!exists) {
+            throw new ServiceException(404, "image_not_found");
+        }
+        storageService.delete(objectKey);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -343,6 +412,8 @@ public class RewardService {
         vo.setStock(inventoryMap.getOrDefault(reward.getId(), 0));
         vo.setCategoryIds(categoryInfo.ids().getOrDefault(reward.getId(), List.of()));
         vo.setCategoryNames(categoryInfo.names().getOrDefault(reward.getId(), List.of()));
+        List<String> imageUrls = resolveRewardImageUrls(reward.getRewardNo());
+        vo.setImageUrls(imageUrls);
         return vo;
     }
 
@@ -416,5 +487,75 @@ public class RewardService {
         Page<RewardVO> empty = new Page<>(current, size, 0);
         empty.setRecords(List.of());
         return empty;
+    }
+
+    private void validateImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new ServiceException(400, "file_empty");
+        }
+        if (file.getSize() > MAX_IMAGE_SIZE) {
+            throw new ServiceException(400, "file_too_large");
+        }
+        String contentType = file.getContentType();
+        if (!ALLOWED_IMAGE_TYPES.contains(contentType)) {
+            throw new ServiceException(400, "unsupported_file_type");
+        }
+    }
+
+    private String buildImageObjectKey(String rewardNo, String originalFilename, String contentType) {
+        String extension = resolveExtension(originalFilename, contentType);
+        String sanitizedName = sanitizeBaseFilename(originalFilename);
+        String filename = (StringUtils.hasText(sanitizedName) ? sanitizedName : "image")
+                + "-" + UUID.randomUUID()
+                + (StringUtils.hasText(extension) ? "." + extension : "");
+        return IMAGE_PREFIX + rewardNo + "/" + filename;
+    }
+
+    private List<String> resolveRewardImageUrls(String rewardNo) {
+        return resolveRewardImages(rewardNo).stream()
+                .map(RewardImageVO::getSignedUrl)
+                .toList();
+    }
+
+    private List<RewardImageVO> resolveRewardImages(String rewardNo) {
+        String prefix = IMAGE_PREFIX + rewardNo + "/";
+        List<String> keys = storageService.listKeys(prefix);
+        return keys.stream()
+                .filter(key -> key != null && key.startsWith(prefix))
+                .sorted()
+                .map(key -> new RewardImageVO(key, storageService.getSignedUrl(key, SIGNED_URL_EXPIRY_SECONDS)))
+                .toList();
+    }
+
+    private String resolveExtension(String originalFilename, String contentType) {
+        if (StringUtils.hasText(originalFilename) && originalFilename.contains(".")) {
+            String ext = originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
+            if (StringUtils.hasText(ext)) {
+                return ext.replaceAll("[^A-Za-z0-9]", "");
+            }
+        }
+        if (!StringUtils.hasText(contentType)) {
+            return "";
+        }
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png" -> "png";
+            case "image/webp" -> "webp";
+            default -> "";
+        };
+    }
+
+    private String sanitizeBaseFilename(String originalFilename) {
+        if (!StringUtils.hasText(originalFilename)) {
+            return null;
+        }
+        // Strip path separators and keep alphanumerics/_-
+        String basename = originalFilename.replace("\\", "/");
+        basename = basename.contains("/") ? basename.substring(basename.lastIndexOf('/') + 1) : basename;
+        if (basename.contains(".")) {
+            basename = basename.substring(0, basename.lastIndexOf('.'));
+        }
+        basename = basename.replaceAll("[^A-Za-z0-9_-]", "_");
+        return basename;
     }
 }
