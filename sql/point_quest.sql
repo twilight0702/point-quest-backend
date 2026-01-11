@@ -73,6 +73,7 @@ CREATE TABLE `message`  (
   CONSTRAINT `fk_message_receiver` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_message_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '站内消息表：用于用户间通知与已读状态' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_message_sender_created` ON `message` (`sender_id`, `created_at`);
 
 -- ----------------------------
 -- Records of message
@@ -97,6 +98,7 @@ CREATE TABLE `order_item`  (
   CONSTRAINT `order_item_chk_1` CHECK (`point_cost_snapshot` >= 0),
   CONSTRAINT `order_item_chk_2` CHECK (`qty` >= 1)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '订单明细表：记录每个订单包含的奖品快照及数量' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_order_item_reward` ON `order_item` (`reward_id`);
 
 -- ----------------------------
 -- Records of order_item
@@ -122,6 +124,7 @@ CREATE TABLE `orders`  (
   CONSTRAINT `chk_address_json_valid` CHECK (json_valid(`address_json`)),
   CONSTRAINT `orders_chk_1` CHECK (`total_points` >= 0)
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '订单表：记录用户兑换订单与收货信息' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_orders_status_created_at` ON `orders` (`status`, `created_at`);
 
 -- ----------------------------
 -- Records of orders
@@ -207,6 +210,7 @@ CREATE TABLE `pool`  (
   UNIQUE INDEX `pool_no`(`pool_no` ASC) USING BTREE,
   CONSTRAINT `pool_chk_1` CHECK (`point_cost` >= 0)
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '活动奖池：定义活动窗口与奖池状态' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_pool_status_time` ON `pool` (`status`, `start_at`, `end_at`);
 
 -- ----------------------------
 -- Records of pool
@@ -229,6 +233,7 @@ CREATE TABLE `pool_item`  (
   CONSTRAINT `fk_pool_item_pool` FOREIGN KEY (`pool_id`) REFERENCES `pool` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_pool_item_reward` FOREIGN KEY (`reward_id`) REFERENCES `reward` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '奖池条目：记录奖池与奖品的关联及展示顺序' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_pool_item_pool_sort` ON `pool_item` (`pool_id`, `sort_no`);
 
 -- ----------------------------
 -- Records of pool_item
@@ -254,6 +259,8 @@ CREATE TABLE `reward`  (
   UNIQUE INDEX `reward_no`(`reward_no` ASC) USING BTREE,
   CONSTRAINT `reward_chk_1` CHECK (`point_cost` >= 0)
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '兑换商品表：维护奖品信息、分类与上下架状态' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_reward_status_created` ON `reward` (`status`, `created_at`);
+CREATE INDEX `idx_reward_is_del` ON `reward` (`is_del`);
 
 -- ----------------------------
 -- Records of reward
@@ -275,6 +282,8 @@ CREATE TABLE `reward_category`  (
   CONSTRAINT `fk_reward_category_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_reward_category_reward` FOREIGN KEY (`reward_id`) REFERENCES `reward` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Mapping between reward and category' ROW_FORMAT = Dynamic;
+CREATE UNIQUE INDEX `uq_reward_category_pair` ON `reward_category` (`reward_id`, `category_id`);
+CREATE INDEX `idx_reward_category_category` ON `reward_category` (`category_id`);
 
 -- ----------------------------
 -- Records of reward_category
@@ -320,6 +329,7 @@ CREATE TABLE `submission_review`  (
   CONSTRAINT `fk_review_submission` FOREIGN KEY (`submission_id`) REFERENCES `task_submission` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `submission_review_chk_1` CHECK (`points_awarded` >= 0)
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '审核记录表：记录管理员对提交的评审与奖励积分' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_review_reviewer_created` ON `submission_review` (`reviewer_id`, `created_at`);
 
 -- ----------------------------
 -- Records of submission_review
@@ -348,6 +358,9 @@ CREATE TABLE `task`  (
   CONSTRAINT `fk_task_creator` FOREIGN KEY (`created_by`) REFERENCES `admin_user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `task_chk_1` CHECK (`point_reward` >= 0)
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '任务表：记录可领取任务、时间范围与发布者' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_task_creator` ON `task` (`created_by`);
+CREATE INDEX `idx_task_status_created` ON `task` (`status`, `created_at`);
+CREATE INDEX `idx_task_is_del` ON `task` (`is_del`);
 
 -- ----------------------------
 -- Records of task
@@ -373,6 +386,7 @@ CREATE TABLE `task_submission`  (
   CONSTRAINT `fk_submission_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_submission_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '任务提交表：用户提交任务完成证明及审批状态' ROW_FORMAT = Dynamic;
+CREATE INDEX `idx_submission_user_status_created` ON `task_submission` (`user_id`, `status`, `created_at`);
 
 -- ----------------------------
 -- Records of task_submission
@@ -390,9 +404,8 @@ CREATE TABLE `users`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `email`(`email` ASC) USING BTREE,
-  INDEX `idx_email`(`email` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表：存储登录账号及创建/更新时间' ROW_FORMAT = Dynamic;
+  UNIQUE INDEX `email`(`email` ASC) USING BTREE
+  ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表：存储登录账号及创建/更新时间' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of users

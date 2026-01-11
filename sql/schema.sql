@@ -17,8 +17,7 @@ CREATE TABLE users
     email         VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    index idx_email (email)
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT ='用户表：存储登录账号及创建/更新时间';
 
 DROP TABLE IF EXISTS admin_user;
@@ -50,6 +49,9 @@ CREATE TABLE task
     is_del            TINYINT(1)   NOT NULL        DEFAULT 0,
     CONSTRAINT fk_task_creator FOREIGN KEY (created_by) REFERENCES admin_user (id) -- 这个要改
 ) COMMENT ='任务表：记录可领取任务、时间范围与发布者';
+CREATE INDEX idx_task_creator ON task (created_by);
+CREATE INDEX idx_task_status_created ON task (status, created_at);
+CREATE INDEX idx_task_is_del ON task (is_del);
 
 DROP TABLE IF EXISTS task_submission;
 CREATE TABLE task_submission
@@ -65,6 +67,7 @@ CREATE TABLE task_submission
     CONSTRAINT fk_submission_task FOREIGN KEY (task_id) REFERENCES task (id),
     CONSTRAINT fk_submission_user FOREIGN KEY (user_id) REFERENCES users (id)
 ) COMMENT ='任务提交表：用户提交任务完成证明及审批状态';
+CREATE INDEX idx_submission_user_status_created ON task_submission (user_id, status, created_at);
 CREATE INDEX idx_submission_task_user_status ON task_submission (task_id, user_id, status);
 
 -- 审核记录
@@ -80,6 +83,7 @@ CREATE TABLE submission_review
     CONSTRAINT fk_review_submission FOREIGN KEY (submission_id) REFERENCES task_submission (id),
     CONSTRAINT fk_review_reviewer FOREIGN KEY (reviewer_id) REFERENCES admin_user (id)
 ) COMMENT ='审核记录表：记录管理员对提交的评审与奖励积分';
+CREATE INDEX idx_review_reviewer_created ON submission_review (reviewer_id, created_at);
 
 -- 积分账户与流水
 DROP TABLE IF EXISTS point_account;
@@ -120,6 +124,8 @@ CREATE TABLE reward
     updated_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_del      TINYINT(1)         NOT NULL DEFAULT 0
 ) COMMENT ='兑换商品表：维护奖品信息、分类与上下架状态';
+CREATE INDEX idx_reward_status_created ON reward (status, created_at);
+CREATE INDEX idx_reward_is_del ON reward (is_del);
 
 -- Reward categories
 DROP TABLE IF EXISTS category;
@@ -139,6 +145,8 @@ CREATE TABLE reward_category
     CONSTRAINT fk_reward_category_reward FOREIGN KEY (reward_id) REFERENCES reward (id),
     CONSTRAINT fk_reward_category_category FOREIGN KEY (category_id) REFERENCES category (id)
 ) COMMENT ='Mapping between reward and category';
+CREATE UNIQUE INDEX uq_reward_category_pair ON reward_category (reward_id, category_id);
+CREATE INDEX idx_reward_category_category ON reward_category (category_id);
 
 DROP TABLE IF EXISTS reward_inventory;
 CREATE TABLE reward_inventory
@@ -166,6 +174,7 @@ CREATE TABLE pool
     created_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) COMMENT ='活动奖池：定义活动窗口与奖池状态';
+CREATE INDEX idx_pool_status_time ON pool (status, start_at, end_at);
 
 DROP TABLE IF EXISTS pool_item;
 CREATE TABLE pool_item
@@ -179,6 +188,7 @@ CREATE TABLE pool_item
     CONSTRAINT fk_pool_item_pool FOREIGN KEY (pool_id) REFERENCES pool (id),
     CONSTRAINT fk_pool_item_reward FOREIGN KEY (reward_id) REFERENCES reward (id)
 ) COMMENT ='奖池条目：记录奖池与奖品的关联及展示顺序';
+CREATE INDEX idx_pool_item_pool_sort ON pool_item (pool_id, sort_no);
 
 -- 订单与支付
 DROP TABLE IF EXISTS orders;
@@ -194,6 +204,7 @@ CREATE TABLE orders
     updated_at   TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users (id)
 ) COMMENT ='订单表：记录用户兑换订单与收货信息';
+CREATE INDEX idx_orders_status_created_at ON orders (status, created_at);
 CREATE INDEX idx_orders_user_created_at ON orders (user_id, created_at);
 
 DROP TABLE IF EXISTS order_item;
@@ -208,6 +219,7 @@ CREATE TABLE order_item
     CONSTRAINT fk_order_item_order FOREIGN KEY (order_id) REFERENCES orders (id),
     CONSTRAINT fk_order_item_reward FOREIGN KEY (reward_id) REFERENCES reward (id)
 ) COMMENT ='订单明细表：记录每个订单包含的奖品快照及数量';
+CREATE INDEX idx_order_item_reward ON order_item (reward_id);
 CREATE INDEX idx_order_item_order ON order_item (order_id);
 
 DROP TABLE IF EXISTS payment;
@@ -236,6 +248,7 @@ CREATE TABLE message
     CONSTRAINT fk_message_sender FOREIGN KEY (sender_id) REFERENCES users (id),
     CONSTRAINT fk_message_receiver FOREIGN KEY (receiver_id) REFERENCES users (id)
 ) COMMENT ='站内消息表：用于用户间通知与已读状态';
+CREATE INDEX idx_message_sender_created ON message (sender_id, created_at);
 CREATE INDEX idx_message_receiver_read ON message (receiver_id, is_read, created_at);
 
 -- 池子抽卡记录
@@ -255,5 +268,6 @@ CREATE TABLE pool_draw
     CONSTRAINT fk_pool_draw_reward FOREIGN KEY (reward_id) REFERENCES reward (id)
 ) COMMENT = '卡池抽卡记录';
 CREATE INDEX idx_pool_draw_user_created ON pool_draw (user_id, created_at);
+CREATE INDEX idx_pool_draw_pool_created ON pool_draw (pool_id, created_at);
 
 SET FOREIGN_KEY_CHECKS = 1;

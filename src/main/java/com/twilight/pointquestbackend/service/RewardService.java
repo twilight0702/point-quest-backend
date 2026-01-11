@@ -96,7 +96,7 @@ public class RewardService {
     public Page<RewardVO> searchVisibleRewards(long page,
                                                long size,
                                                String keyword,
-                                               Long categoryId,
+                                               List<Long> categoryIds,
                                                Boolean onlyInStock) {
         long current = Math.max(1, page);
         long pageSize = Math.min(100, Math.max(1, size));
@@ -107,9 +107,9 @@ public class RewardService {
                     .or()
                     .like(Reward::getRewardNo, keyword));
         }
-        if (categoryId != null) {
+        if (categoryIds != null && !categoryIds.isEmpty()) {
             Set<Long> rewardIds = rewardCategoryMapper.selectList(
-                            new LambdaQueryWrapper<RewardCategory>().eq(RewardCategory::getCategoryId, categoryId))
+                            new LambdaQueryWrapper<RewardCategory>().in(RewardCategory::getCategoryId, categoryIds))
                     .stream()
                     .map(RewardCategory::getRewardId)
                     .filter(Objects::nonNull)

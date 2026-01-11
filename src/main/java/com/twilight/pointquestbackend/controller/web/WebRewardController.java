@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.twilight.pointquestbackend.common.ApiResponse;
 import com.twilight.pointquestbackend.service.RewardService;
 import com.twilight.pointquestbackend.vo.RewardVO;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,14 +28,19 @@ public class WebRewardController {
     public ApiResponse<Page<RewardVO>> listRewards(@RequestParam(defaultValue = "1") long page,
                                                    @RequestParam(defaultValue = "10") long size,
                                                    @RequestParam(required = false) String keyword,
-                                                   @RequestParam(required = false) Long categoryId,
+                                                   @RequestParam(required = false) List<Long> categoryIds,
                                                    @RequestParam(required = false, name = "onlyInStock") Boolean onlyInStock) {
-        Page<RewardVO> result = rewardService.searchVisibleRewards(page, size, keyword, categoryId, onlyInStock);
+        Page<RewardVO> result = rewardService.searchVisibleRewards(page, size, keyword, categoryIds, onlyInStock);
         return ApiResponse.success(result);
     }
 
     @GetMapping("/rewards/{rewardNo}")
     public ApiResponse<RewardVO> getReward(@PathVariable String rewardNo) {
         return ApiResponse.success(rewardService.getVisibleReward(rewardNo));
+    }
+
+    @GetMapping("/rewards/categories")
+    public ApiResponse<Object> getAllCategories() {
+        return ApiResponse.success(rewardService.getAllCategories());
     }
 }
